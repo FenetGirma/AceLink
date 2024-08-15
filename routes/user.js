@@ -7,18 +7,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
-router.post('/getPrediction', async (req, res) => {
-    try {
-        const response = await axios.post('http://localhost:5000/predict', {
-            features: req.body.features
-        });
-        res.json(response.data);
-    } catch (error) {
-        console.error('Axios error:', error.response ? error.response.data : error.message);
-        res.status(500).json({ error: error.response ? error.response.data : error.message });
-    }
-});
-
 // Secret key for JWT
 const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_key'; // Use environment variable for production
 
@@ -51,7 +39,7 @@ router.post('/register', async (req, res) => {
         const student = new Student({
           username,
           email,
-          profile
+          ...profile
         });
         await student.save();
   
@@ -197,6 +185,24 @@ router.put('/update-profile', async (req, res) => {
     }
   });
   
+
+  router.get('/get-tutors', async (req, res) => {
+    try {
+      // Fetch all tutors from the database
+      const tutors = await Tutor.find({});
+  
+      // If no tutors are found, return a 404 response
+      if (tutors.length === 0) {
+        return res.status(404).json({ message: 'No tutors found' });
+      }
+  
+      // Return the list of tutors
+      res.status(200).json({ tutors });
+    } catch (err) {
+      console.error('Error fetching tutors:', err.message || err);
+      res.status(500).json({ error: 'Server error', details: err.message });
+    }
+  });
   
 
 module.exports = router;
