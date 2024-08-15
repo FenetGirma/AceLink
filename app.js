@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const userRoutes = require('./routes/user');
 const dotenv = require('dotenv');
 const studyGroupRoutes = require('./routes/sgRoutes')
-
+const recommend =require('./routes/recommend');
+const request= require('./routes/requests')
 dotenv.config();
 
 const app = express();
@@ -15,8 +16,10 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
   .catch(err => console.log(err));
 
 // Routes
-app.use('/user', userRoutes);
-app.use('/study-groups', studyGroupRoutes);
+app.use('', userRoutes);
+app.use('', studyGroupRoutes);
+app.use('',recommend);
+app.use('',request)
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -29,7 +29,8 @@ const TutorSchema = new mongoose.Schema({
       professional_development: { type: String },
       personal_interests: { type: [String] }
     }
-  ]
+  ],
+  requests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Request' }]
 });
 
 module.exports = mongoose.model('Tutor', TutorSchema);
