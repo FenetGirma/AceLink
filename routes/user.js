@@ -6,7 +6,18 @@ const Tutor = require('../models/Tutor');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const multer = require('multer');
+// Route for updating the profile for both students and tutors
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Directory where the profile pictures will be saved
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname); // Create a unique filename
+  }
+});
 
+const upload = multer({ storage: storage });
 // Secret key for JWT
 const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_key'; // Use environment variable for production
 
@@ -125,65 +136,64 @@ router.post('/register', async (req, res) => {
   });
   
   
-// Route for updating the profile for both students and tutors
-router.put('/update-profile', async (req, res) => {
-    try {
-      const { userId, profile } = req.body;
-  
-      // Find the user document by userId
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-  
-      let updatedProfile;
-  
-      if (user.role === 'Tutor') {
-        // Update tutor profile assuming profile array contains one object
-        updatedProfile = await Tutor.findOneAndUpdate(
-          { email: user.email },  // Find tutor by the email associated with the user
-          {
-            $set: {
-              'profile.0.subject_expertise': profile.subject_expertise || [],
-              'profile.0.grade_levels': profile.grade_levels || [],
-              'profile.0.languages_spoken': profile.languages_spoken || [],
-              'profile.0.specialization_areas': profile.specialization_areas || [],
-              'profile.0.certifications': profile.certifications || [],
-              'profile.0.personal_interests': profile.personal_interests || [],
-              'profile.0.past_student_outcomes': profile.past_student_outcomes || [],
-              'profile.0.teaching_style': profile.teaching_style || ''
-            }
-          },
-          { new: true, runValidators: true }
-        );
-      } else if (user.role === 'Student') {
-        // Update student profile assuming profile array contains one object
-        updatedProfile = await Student.findOneAndUpdate(
-          { email: user.email },  // Find student by the email associated with the user
-          {
-            $set: {
-              'profile.0.subjects_of_interest': profile.subjects_of_interest || [],
-              'profile.0.education_level': profile.education_level || '',
-              'profile.0.learning_goals': profile.learning_goals || [],
-              'profile.0.languages_spoken': profile.languages_spoken || [],
-              'profile.0.personal_interests': profile.personal_interests || [],
-            }
-          },
-          { new: true, runValidators: true }
-        );
-      } else {
-        return res.status(400).json({ error: 'Invalid role' });
-      }
-  
-      if (!updatedProfile) {
-        return res.status(404).json({ error: 'Profile not found' });
-      }
-  
-      res.status(200).json({ message: 'Profile updated successfully', profile: updatedProfile });
-    } catch (err) {
-      res.status(400).json({ error: err.message });
+
+
+// Route for updating the profile (with optional profile picture) for both students and tutors
+router.put('/update-profile', upload.single('profilePicture'), async (req, res) => {
+  try {
+    const { userId, profile } = req.body;
+
+    // Find the user document by userId
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
-  });
+
+    // Handle the profile picture if uploaded
+    let profilePictureUrl = null;
+    if (req.file) {
+      profilePictureUrl = req.file.path; // Save the path of the uploaded profile picture
+    }
+
+    let updatedProfile;
+
+    if (user.role === 'Tutor') {
+      // Update tutor profile, including profile picture
+      updatedProfile = await Tutor.findOneAndUpdate(
+        { email: user.email },  // Find tutor by the email associated with the user
+        {
+          $set: {
+            ...profile,
+            'profile_picture': profilePictureUrl || profile.profile_picture, // Update profile picture if new one is uploaded
+          }
+        },
+        { new: true, runValidators: true }
+      );
+    } else if (user.role === 'Student') {
+      // Update student profile, including profile picture
+      updatedProfile = await Student.findOneAndUpdate(
+        { email: user.email },  // Find student by the email associated with the user
+        {
+          $set: {
+            ...profile,
+            'profile_picture': profilePictureUrl || profile.profile_picture, // Update profile picture if new one is uploaded
+          }
+        },
+        { new: true, runValidators: true }
+      );
+    } else {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    if (!updatedProfile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully', profile: updatedProfile });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
   
 
   router.get('/get-tutors', async (req, res) => {

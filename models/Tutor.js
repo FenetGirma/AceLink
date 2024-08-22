@@ -13,7 +13,8 @@ const TutorSchema = new mongoose.Schema({
       languages_spoken: { type: [String] },   // No `required: true`
       rating: { type: Number },
       experience: { type: Number },           // No `required: true`
-      qualifications: { type: String },       // No `required: true`
+      qualifications: { type: String },
+      profile_picture: { type: String },        // No `required: true`
       specialization_areas: { type: [String] },
       certifications: { type: [String] },
       performance_metrics: {

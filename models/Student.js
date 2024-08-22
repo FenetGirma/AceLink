@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 // Independent Student Schema
+// Updated Student Schema
 const StudentSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
@@ -14,6 +15,7 @@ const StudentSchema = new mongoose.Schema({
       preferred_language: { type: String },
       goals: { type: String },
       current_needs: { type: String },
+      profile_picture: { type: String }, // Added profile picture field
       parent_contact: {
         name: { type: String },
         email: { type: String },
@@ -32,5 +34,6 @@ const StudentSchema = new mongoose.Schema({
     }
   ]
 });
+
 
 module.exports = mongoose.model('Student', StudentSchema);
